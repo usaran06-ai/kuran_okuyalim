@@ -1,0 +1,9 @@
+meal.js - Türkçe meal (KİŞİSEL KULLANIM İÇİN)
+
+Meal metni: Diyanet İşleri Başkanlığı mealidir. Tanzil Project (tanzil.net/trans/tr.diyanet)
+kaynaklı olup "quran-json" paketi (v3.1.2, github.com/risan/quran-json, CC BY-SA 4.0) üzerinden alınmıştır.
+
+ÖNEMLİ: Meal metninin telifi Diyanet İşleri Başkanlığı'na aittir. Tanzil, çevirileri yalnızca
+ticari olmayan amaçla kullanıma sunar. Bu dosya sadece kişisel/yerel kullanım içindir.
+Siteyi internette yayınlamadan veya reklam geliri elde etmeden önce meal.js dosyasını
+KALDIRIN ya da Diyanet'ten yazılı izin alın. (Sayfa meal.js olmadan da çalışır.)
