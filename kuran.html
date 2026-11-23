@@ -65,6 +65,15 @@
 #th-amber::before { background: #18130e; }
 #thseg { flex-wrap: wrap; } #thseg button { flex: 1 1 28%; }
 #thseg button.sw::before { content: ""; display: inline-block; width: .8em; height: .8em; border-radius: 50%; border: 1px solid currentColor; margin-inline-end: 6px; vertical-align: -1px; }
+html { overscroll-behavior-y: contain; }  /* telefonda sayfa ucunda esneme / yenileme hareketi olmasın */
+#rotip {
+  position: fixed; z-index: 20; left: 50%; top: 14px; transform: translateX(-50%);
+  width: min(420px, calc(100vw - 24px)); padding: 12px 14px;
+  background: var(--panel); color: var(--ink); border: 2px solid var(--accent); border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25); font-size: 14px; line-height: 1.5;
+}
+#rotip .rb { display: flex; gap: 8px; margin-top: 10px; }
+#rotip .rb button { flex: 1; }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
@@ -1262,6 +1271,15 @@ footer {
     var key = k < 0 ? "" : LP.playing + ":" + k;
     if (key !== LP.wkey) { LP.wkey = key; paintWord(); }
   }
+  var scrollLock = 0;
+  function followScroll(el) {  // başlık ile Dinle paneli arasında rahat görünüyorsa hiç kaydırma; kaydırırken üst üste kaydırma yapma
+    var r = el.getBoundingClientRect(), hd = document.querySelector("header");
+    var top = (hd ? hd.getBoundingClientRect().bottom : 0) + 16;
+    var bot = listenPanel.hidden ? window.innerHeight - 80 : listenPanel.getBoundingClientRect().top - 24;
+    if (r.top >= top && r.bottom <= bot) return;
+    var now = Date.now(); if (now - scrollLock < 700) return; scrollLock = now;
+    window.scrollTo({ top: window.scrollY + r.top - (top + (bot - top) * 0.3), behavior: "smooth" });
+  }
   function paintWord() {
     document.querySelectorAll(".w.cur, .w.rd").forEach(function (x) { x.classList.remove("cur", "rd"); });
     if (!LP.wkey) return;
@@ -1271,10 +1289,7 @@ footer {
     var ws = vs.querySelectorAll(".w");
     for (var i = 0; i < ws.length && i <= k; i++) ws[i].classList.add(i < k ? "rd" : "cur");
     var c = ws[k];
-    if (c && document.getElementById("lfollow").checked) {
-      var r = c.getBoundingClientRect();
-      if (r.top < 140 || r.bottom > window.innerHeight - 120) c.scrollIntoView({ block: "center", behavior: "smooth" });
-    }
+    if (c && document.getElementById("lfollow").checked) followScroll(c);
   }
   function setPlaying(aid) {
     LP.playing = aid; LP.wkey = "";
@@ -1292,8 +1307,8 @@ footer {
     if (a) a.classList.add("pl");
     if (m) m.classList.add("pl");
     if (scroll && document.getElementById("lfollow").checked) {
-      if (a) a.scrollIntoView({ block: "center", behavior: "smooth" });
-      if (m && mealOn) m.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (a && a.getBoundingClientRect().height < window.innerHeight * 0.6) followScroll(a);
+      if (m && mealOn && !window.matchMedia("(max-width: 1100px)").matches) m.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }
   function afterRender() { markPlaying(false); paintWord(); paintTev(); syncToView(); }
@@ -1540,8 +1555,23 @@ footer {
   });
 
   var settings = document.getElementById("settings"), overlay = document.getElementById("overlay");
+  var rotipShown = false;
+  function showRotip() {
+    if (rotipShown || load("kuran.rotip") === "1") return;
+    if (!window.matchMedia("(orientation: portrait) and (max-width: 700px)").matches) return;
+    rotipShown = true;
+    var d = document.createElement("div"); d.id = "rotip";
+    d.innerHTML = '<div>📱 Daha rahat okumak için telefonu <b>yatay</b> kullanmanızı öneririz. Dönmezse telefonun “Otomatik döndür” ayarını açın.</div><div class="rb"><button id="rotok">Tamam</button><button id="rotno">Bir daha gösterme</button></div>';
+    document.body.appendChild(d);
+    function bye() { if (d.parentNode) d.parentNode.removeChild(d); }
+    document.getElementById("rotok").addEventListener("click", bye);
+    document.getElementById("rotno").addEventListener("click", function () { store("kuran.rotip", "1"); bye(); });
+    setTimeout(bye, 15000);
+  }
   function openSettings(on) {
+    var was = settings.classList.contains("open");
     settings.classList.toggle("open", on); overlay.classList.toggle("open", on);
+    if (was && !on) showRotip();
   }
   document.getElementById("gear").addEventListener("click", function () { openSettings(!settings.classList.contains("open")); });
   document.getElementById("sclose").addEventListener("click", function () { openSettings(false); });
